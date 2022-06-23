@@ -1,59 +1,50 @@
-import React, { Component } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import "./Robocards.css";
 import Searchbar from './Searchbar';
 import Cardinfo from './Cardinfo';
 
-class Robocards extends Component {
+function Robocards() {
 
-    constructor(props){
-        super(props)
-        
-        this.state = {
-            cards: [],
-            searchbox : ''
-        }
-        this.inputHandler = this.inputHandler.bind(this);
-    }
+    const [values, setValues] = useState({
+        cards: [],
+        searchbox: '',
+        filtercards: []
+    });
 
-    componentDidMount() {
+    useEffect(() => {
         axios.get("https://jsonplaceholder.typicode.com/users")
-        .then( response => {
-            this.setState({
-                cards: response.data
+            .then(response => {
+                setValues({ cards: response.data, filtercards: response.data })
+            }).catch(err => {
+                console.log(err)
             })
-        }).catch( err => {
-            console.log(err)
-        })
-    }
+    }, []);
 
-    inputHandler(e)
-    {
+    const inputHandler = (e) => {
         var input = e.target.value.toLowerCase()
-        this.setState({
-            searchbox: input
-        })
-        
+        setValues({ ...values, searchbox: input })
     }
 
-    render() {
-        const {cards,searchbox} =this.state
-        const filtercards = cards.filter(cards => {
-            return cards.name.toLowerCase().includes(searchbox)
+    useEffect(() => {
+        let filtercards1 = values.cards.filter(cards => {
+            return cards.name.toLowerCase().includes(values.searchbox)
         })
+        setValues({ ...values, filtercards: filtercards1 })
+    }, [values.searchbox])
 
-        return (
-            <div>
-                <Searchbar searchHandler = {this.inputHandler}></Searchbar>
+    return (
+        <div>
+            <Searchbar searchHandler={inputHandler}></Searchbar>
 
-                <div className="grid">
-                    {filtercards.map(filtercards => 
-                        <Cardinfo filtercards={filtercards}></Cardinfo>)}
-                </div>
-                
+            <div className="grid">
+                {values.filtercards.map(filtercards =>
+                    <Cardinfo filtercards={filtercards}></Cardinfo>)}
             </div>
-        )
-    }
+
+        </div>
+    )
+
 }
 
 export default Robocards
